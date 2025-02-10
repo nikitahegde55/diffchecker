@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diffchecker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: bold;
+            color: #343a40;
+        }
+        .flex-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .text-area-container {
+            width: 48%;
+            display: flex;
+            flex-direction: column;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        .diff-output {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .diff-box {
+            width: 48%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            min-height: 150px;
+            text-align: left;
+            background: #f9f9f9;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .removed { background-color: #ffcccc; padding: 2px; }
+        .added { background-color: #ccffcc; padding: 2px; }
+        .buttons {
+            margin-top: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-diff { background-color: #28a745; color: white; }
+        .btn-clear { background-color: #dc3545; color: white; }
+        .summary {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+        .animated-heading {
+    font-size: 48px;
+    font-weight: bold;
+    background: linear-gradient(45deg, #1a0319, #0e0d0d, #171616);
+    background-clip: text; /* Standard */
+-webkit-background-clip: text; /* For Chrome, Safari */
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    animation: fadeInScale 1.5s ease-in-out;
+}
+
+@keyframes fadeInScale {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="animated-heading">Diffchecker</h1>
+        <div class="flex-container">
+            <div class="text-area-container">
+                <label>Original Text</label>
+                <textarea id="originalText" oninput="updateLineNumbers()"></textarea>
+            </div>
+            <div class="text-area-container">
+                <label>Changed Text</label>
+                <textarea id="changedText" oninput="updateLineNumbers()"></textarea>
+            </div>
+        </div>
+        <div class="buttons">
+            <button class="btn-diff" onclick="findDifference()">Find Difference</button>
+            <button class="btn-clear" onclick="clearText()">Clear</button>
+        </div>
+        <div class="summary" id="summary"></div>
+        <div class="diff-output">
+            <div id="originalOutput" class="diff-box"></div>
+            <div id="changedOutput" class="diff-box"></div>
+        </div>
+    </div>
+    <script>
+        function findDifference() {
+            const originalLines = document.getElementById("originalText").value.split("\n");
+            const changedLines = document.getElementById("changedText").value.split("\n");
+            let originalHTML = "", changedHTML = "";
+            let removals = 0, additions = 0;
+            
+            const maxLines = Math.max(originalLines.length, changedLines.length);
+            
+            for (let i = 0; i < maxLines; i++) {
+                let originalWords = (originalLines[i] || "").split(" ");
+                let changedWords = (changedLines[i] || "").split(" ");
+                
+                let originalFormatted = [], changedFormatted = [];
+                
+                originalWords.forEach(word => {
+                    if (!changedWords.includes(word)) {
+                        originalFormatted.push(`<span class='removed'>${word}</span>`);
+                        removals++;
+                    } else {
+                        originalFormatted.push(word);
+                    }
+                });
+                
+                changedWords.forEach(word => {
+                    if (!originalWords.includes(word)) {
+                        changedFormatted.push(`<span class='added'>${word}</span>`);
+                        additions++;
+                    } else {
+                        changedFormatted.push(word);
+                    }
+                });
+                
+                originalHTML += `${i + 1} ${originalFormatted.join(" ")}\n`;
+                changedHTML += `${i + 1} ${changedFormatted.join(" ")}\n`;
+            }
+            
+            document.getElementById("originalOutput").innerHTML = originalHTML;
+            document.getElementById("changedOutput").innerHTML = changedHTML;
+            document.getElementById("summary").innerHTML = `<span style='color:red;'>❌ ${removals} removals</span> | <span style='color:green;'>✅ ${additions} additions</span>`;
+        }
+        
+        function clearText() {
+            document.getElementById("originalText").value = "";
+            document.getElementById("changedText").value = "";
+            document.getElementById("originalOutput").innerHTML = "";
+            document.getElementById("changedOutput").innerHTML = "";
+            document.getElementById("summary").innerHTML = "";
+        }
+    </script>
+</body>
+</html>
